@@ -1,0 +1,73 @@
+# LexVeritas Backend Configuration
+# 环境变量格式: LEXVERITAS_<SECTION>_<KEY> (例如: LEXVERITAS_SERVER_PORT=8080)
+
+server:
+  name: "lex-veritas-backend"
+  port: 8080
+  mode: "debug" # debug | release | test
+  read_timeout: 30s
+  write_timeout: 30s
+
+log:
+  level: "info" # debug | info | warn | error
+  format: "json" # json | console
+  output: "stdout" # stdout | file
+  file_path: "./logs/app.log"
+  max_size: 100 # MB
+  max_backups: 7
+  max_age: 30 # days
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "lexveritas"
+  password: "" # 使用环境变量: LEXVERITAS_DATABASE_PASSWORD
+  dbname: "lexveritas"
+  sslmode: "disable"
+  max_open_conns: 100
+  max_idle_conns: 10
+  conn_max_lifetime: 1h
+  conn_max_idle_time: 10m
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: "" # 使用环境变量: LEXVERITAS_REDIS_PASSWORD
+  db: 0
+  pool_size: 100
+  min_idle_conns: 10
+  dial_timeout: 5s
+  read_timeout: 3s
+  write_timeout: 3s
+
+milvus:
+  host: "localhost"
+  port: 19530
+  collection_name: "legal_knowledge"
+  dimension: 1536
+
+jwt:
+  secret: "" # 使用环境变量: LEXVERITAS_JWT_SECRET
+  expire: 24h
+  issuer: "lex-veritas"
+
+cors:
+  allowed_origins:
+    - "http://localhost:3000"
+    - "http://localhost:5173"
+  allowed_methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+  allowed_headers:
+    - "Origin"
+    - "Content-Type"
+    - "Authorization"
+  max_age: 12h
+
+ratelimit:
+  enabled: true
+  rate: 100 # 每秒请求数
+  burst: 200 # 突发容量
