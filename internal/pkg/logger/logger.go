@@ -1,4 +1,3 @@
-// Package logger 提供基于 Zap 的高性能日志系统
 package logger
 
 import (

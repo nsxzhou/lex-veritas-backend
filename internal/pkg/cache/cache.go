@@ -1,4 +1,3 @@
-// Package cache 提供 Redis 缓存管理
 package cache
 
 import (

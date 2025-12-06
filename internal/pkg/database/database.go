@@ -1,4 +1,3 @@
-// Package database 提供 PostgreSQL 数据库连接管理
 package database
 
 import (

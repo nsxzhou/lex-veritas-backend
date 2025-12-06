@@ -1,4 +1,3 @@
-// Package client 提供外部服务客户端封装
 package client
 
 // BlockchainClient 区块链客户端（占位实现）

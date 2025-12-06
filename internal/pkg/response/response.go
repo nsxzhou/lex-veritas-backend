@@ -1,4 +1,3 @@
-// Package response 提供统一的 HTTP 响应格式
 package response
 
 import (

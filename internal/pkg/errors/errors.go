@@ -1,4 +1,3 @@
-// Package errors 提供统一的错误处理机制
 package errors
 
 import (

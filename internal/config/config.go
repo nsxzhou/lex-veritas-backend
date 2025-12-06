@@ -1,4 +1,3 @@
-// Package config 提供应用配置管理功能
 package config
 
 import (

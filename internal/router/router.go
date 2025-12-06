@@ -1,4 +1,3 @@
-// Package router 提供 HTTP 路由配置
 package router
 
 import (
