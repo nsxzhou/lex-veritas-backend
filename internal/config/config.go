@@ -86,14 +86,20 @@ func (c *RedisConfig) Addr() string {
 
 // MilvusConfig Milvus 向量数据库配置
 type MilvusConfig struct {
-	Host           string `mapstructure:"host"`
-	Port           int    `mapstructure:"port"`
-	CollectionName string `mapstructure:"collection_name"`
-	Dimension      int    `mapstructure:"dimension"`
+	Host           string `mapstructure:"host"`            // Milvus/Zilliz 地址
+	Port           int    `mapstructure:"port"`            // 端口号
+	CollectionName string `mapstructure:"collection_name"` // 集合名称
+	Dimension      int    `mapstructure:"dimension"`       // 向量维度
+	APIKey         string `mapstructure:"api_key"`         // Zilliz Cloud API Key
+	UseCloud       bool   `mapstructure:"use_cloud"`       // 是否使用 Zilliz Cloud
 }
 
 // Addr 返回 Milvus 地址
 func (c *MilvusConfig) Addr() string {
+	// Zilliz Cloud 使用完整的 HTTPS URL
+	if c.UseCloud {
+		return c.Host // 直接返回完整的云端点 URL
+	}
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
 }
 
@@ -200,6 +206,8 @@ func Load(configPath string) (*Config, error) {
 		// Milvus
 		{"milvus.host", "MILVUS_HOST"},
 		{"milvus.port", "MILVUS_PORT"},
+		{"milvus.api_key", "MILVUS_API_KEY"},
+		{"milvus.use_cloud", "MILVUS_USE_CLOUD"},
 	}
 
 	for _, e := range bindEnvs {

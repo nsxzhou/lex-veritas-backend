@@ -8,12 +8,12 @@ import (
 
 	"github.com/lexveritas/lex-veritas-backend/internal/config"
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/logger"
-	"github.com/milvus-io/milvus-sdk-go/v2/client"
+	"github.com/milvus-io/milvus/client/v2/milvusclient"
 	"go.uber.org/zap"
 )
 
 var (
-	milvusClient client.Client
+	milvusClient *milvusclient.Client
 	milvusOnce   sync.Once
 )
 
@@ -31,21 +31,33 @@ func InitMilvus(cfg *MilvusConfig) error {
 
 // connectMilvus 建立 Milvus 连接
 func connectMilvus(cfg *MilvusConfig) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Zilliz Cloud 连接可能需要更长时间
+	timeout := 10 * time.Second
+	if cfg.UseCloud {
+		timeout = 30 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var err error
-	milvusClient, err = client.NewClient(ctx, client.Config{
+	// 构建连接配置
+	clientConfig := &milvusclient.ClientConfig{
 		Address: cfg.Addr(),
-	})
+	}
+
+	// 如果配置了 API Key，使用 API Key 认证 (Zilliz Cloud)
+	if cfg.APIKey != "" {
+		clientConfig.APIKey = cfg.APIKey
+	}
+	var err error
+	milvusClient, err = milvusclient.New(ctx, clientConfig)
 	if err != nil {
 		return fmt.Errorf("milvus connection failed: %w", err)
 	}
 
 	// 验证连接是否真正可用（gRPC 是延迟连接）
-	_, err = milvusClient.ListCollections(ctx)
+	_, err = milvusClient.ListCollections(ctx, milvusclient.NewListCollectionOption())
 	if err != nil {
-		milvusClient.Close()
+		milvusClient.Close(ctx)
 		milvusClient = nil
 		return fmt.Errorf("milvus connection validation failed: %w", err)
 	}
@@ -59,7 +71,7 @@ func connectMilvus(cfg *MilvusConfig) error {
 }
 
 // GetMilvusClient 获取 Milvus 客户端
-func GetMilvusClient() client.Client {
+func GetMilvusClient() *milvusclient.Client {
 	return milvusClient
 }
 
@@ -79,7 +91,7 @@ func CloseMilvus() error {
 	}
 
 	logger.Info("关闭 Milvus 连接")
-	return milvusClient.Close()
+	return milvusClient.Close(context.Background())
 }
 
 // SearchVector 向量检索
