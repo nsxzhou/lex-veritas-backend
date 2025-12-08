@@ -10,12 +10,16 @@ import (
 
 // AuthHandler 认证处理器
 type AuthHandler struct {
-	authSvc service.AuthService
+	authSvc   service.AuthService
+	verifySvc service.VerificationService
 }
 
 // NewAuthHandler 创建认证处理器
-func NewAuthHandler(authSvc service.AuthService) *AuthHandler {
-	return &AuthHandler{authSvc: authSvc}
+func NewAuthHandler(authSvc service.AuthService, verifySvc service.VerificationService) *AuthHandler {
+	return &AuthHandler{
+		authSvc:   authSvc,
+		verifySvc: verifySvc,
+	}
 }
 
 // Login 邮箱密码登录
@@ -72,7 +76,22 @@ func (h *AuthHandler) LoginByPhone(c *gin.Context) {
 // SendCode 发送验证码
 // POST /api/v1/auth/send-code
 func (h *AuthHandler) SendCode(c *gin.Context) {
-	// TODO: 实现发送验证码逻辑
+	var req dto.SendCodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+
+	if err := h.verifySvc.SendCode(c.Request.Context(), req.Email, req.Purpose); err != nil {
+		switch err {
+		case service.ErrCodeSendTooFrequent:
+			response.TooManyRequests(c, err.Error())
+		default:
+			response.InternalError(c, err)
+		}
+		return
+	}
+
 	response.Success(c, gin.H{"message": "verification code sent"})
 }
 
@@ -82,6 +101,19 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "invalid request: "+err.Error())
+		return
+	}
+
+	// 验证验证码
+	if err := h.verifySvc.VerifyCode(c.Request.Context(), req.Email, req.Code, "register"); err != nil {
+		switch err {
+		case service.ErrCodeInvalid, service.ErrCodeExpired:
+			response.BadRequest(c, err.Error())
+		case service.ErrTooManyAttempts:
+			response.TooManyRequests(c, err.Error())
+		default:
+			response.InternalError(c, err)
+		}
 		return
 	}
 

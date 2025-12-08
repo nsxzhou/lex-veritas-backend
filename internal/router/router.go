@@ -10,6 +10,7 @@ import (
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/auth"
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/cache"
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/database"
+	"github.com/lexveritas/lex-veritas-backend/internal/pkg/email"
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/response"
 	"github.com/lexveritas/lex-veritas-backend/internal/service"
 )
@@ -41,8 +42,14 @@ func Setup(cfg *config.Config) *gin.Engine {
 		},
 	)
 
+	// 初始化邮件发送器
+	emailSender := email.NewSMTPSender(&cfg.Email)
+
+	// 初始化验证码服务
+	verifySvc := service.NewVerificationService(emailSender, &cfg.Verification)
+
 	// 初始化 Handler
-	authHandler := handler.NewAuthHandler(authSvc)
+	authHandler := handler.NewAuthHandler(authSvc, verifySvc)
 
 	// 健康检查端点
 	r.GET("/health", healthHandler)

@@ -10,15 +10,17 @@ import (
 
 // Config 应用配置结构体
 type Config struct {
-	Server    ServerConfig    `mapstructure:"server"`
-	Log       LogConfig       `mapstructure:"log"`
-	Database  DatabaseConfig  `mapstructure:"database"`
-	Redis     RedisConfig     `mapstructure:"redis"`
-	Milvus    MilvusConfig    `mapstructure:"milvus"`
-	JWT       JWTConfig       `mapstructure:"jwt"`
-	Auth      AuthConfig      `mapstructure:"auth"`
-	CORS      CORSConfig      `mapstructure:"cors"`
-	RateLimit RateLimitConfig `mapstructure:"ratelimit"`
+	Server       ServerConfig       `mapstructure:"server"`
+	Log          LogConfig          `mapstructure:"log"`
+	Database     DatabaseConfig     `mapstructure:"database"`
+	Redis        RedisConfig        `mapstructure:"redis"`
+	Milvus       MilvusConfig       `mapstructure:"milvus"`
+	JWT          JWTConfig          `mapstructure:"jwt"`
+	Auth         AuthConfig         `mapstructure:"auth"`
+	CORS         CORSConfig         `mapstructure:"cors"`
+	RateLimit    RateLimitConfig    `mapstructure:"ratelimit"`
+	Email        EmailConfig        `mapstructure:"email"`
+	Verification VerificationConfig `mapstructure:"verification"`
 }
 
 // ServerConfig HTTP 服务配置
@@ -122,6 +124,26 @@ type RateLimitConfig struct {
 	Enabled bool `mapstructure:"enabled"`
 	Rate    int  `mapstructure:"rate"`
 	Burst   int  `mapstructure:"burst"`
+}
+
+// EmailConfig 邮件服务配置
+type EmailConfig struct {
+	Provider     string `mapstructure:"provider"` // smtp | resend
+	SMTPHost     string `mapstructure:"smtp_host"`
+	SMTPPort     int    `mapstructure:"smtp_port"`
+	SMTPUser     string `mapstructure:"smtp_user"`
+	SMTPPassword string `mapstructure:"smtp_password"`
+	FromAddress  string `mapstructure:"from_address"`
+	FromName     string `mapstructure:"from_name"`
+	ResendAPIKey string `mapstructure:"resend_api_key"`
+}
+
+// VerificationConfig 验证码配置
+type VerificationConfig struct {
+	CodeLength  int           `mapstructure:"code_length"`
+	CodeExpire  time.Duration `mapstructure:"code_expire"`
+	ResendDelay time.Duration `mapstructure:"resend_delay"`
+	MaxAttempts int           `mapstructure:"max_attempts"`
 }
 
 // global 全局配置实例

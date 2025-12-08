@@ -83,3 +83,19 @@ quota:
   guest_max_sessions: 1 # 匿名用户最大会话数
   guest_max_chats: 5 # 匿名用户每会话最大对话数
   guest_session_ttl: 24h # 匿名会话过期时间
+
+email:
+  provider: "smtp" # smtp | resend
+  smtp_host: "smtp.qq.com"
+  smtp_port: 587
+  smtp_user: "" # 使用环境变量: LEXVERITAS_EMAIL_SMTP_USER
+  smtp_password: "" # 使用环境变量: LEXVERITAS_EMAIL_SMTP_PASSWORD
+  from_address: "noreply@example.com"
+  from_name: "LexVeritas"
+  resend_api_key: "" # 使用环境变量: LEXVERITAS_EMAIL_RESEND_API_KEY
+
+verification:
+  code_length: 6
+  code_expire: 5m
+  resend_delay: 60s
+  max_attempts: 5

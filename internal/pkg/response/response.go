@@ -103,6 +103,15 @@ func NotFound(c *gin.Context) {
 	ErrorWithCode(c, errors.CodeNotFound)
 }
 
+// TooManyRequests 请求过于频繁响应
+func TooManyRequests(c *gin.Context, message ...string) {
+	if len(message) > 0 && message[0] != "" {
+		ErrorWithMessage(c, errors.CodeTooManyRequests, message[0])
+		return
+	}
+	ErrorWithCode(c, errors.CodeTooManyRequests)
+}
+
 // InternalError 服务器内部错误响应
 func InternalError(c *gin.Context, err error) {
 	Error(c, errors.Wrap(errors.CodeInternalError, err))

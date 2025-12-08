@@ -44,6 +44,26 @@ const (
 	// KeyRateLimitUser 用户限流计数键
 	// 格式: ratelimit:user:{userId}
 	KeyRateLimitUser = "ratelimit:user:"
+
+	// ========== 验证码模块 ==========
+
+	// KeyVerificationCode 验证码存储键
+	// 格式: verify:code:{purpose}:{email}
+	// 值: 验证码
+	// TTL: 5 minutes
+	KeyVerificationCode = "verify:code:"
+
+	// KeyVerificationLimit 发送频率限制键
+	// 格式: verify:limit:{email}
+	// 值: "1"
+	// TTL: 60 seconds
+	KeyVerificationLimit = "verify:limit:"
+
+	// KeyVerificationAttempts 验证尝试次数键
+	// 格式: verify:attempts:{email}
+	// 值: 尝试次数
+	// TTL: 5 minutes
+	KeyVerificationAttempts = "verify:attempts:"
 )
 
 // ============================================================================
@@ -108,4 +128,19 @@ func SessionUserKey(userID string) string {
 // GuestSessionKey 生成匿名用户会话键
 func GuestSessionKey(guestID string) string {
 	return KeyGuestSession + guestID
+}
+
+// VerificationCodeKey 生成验证码存储键
+func VerificationCodeKey(purpose, email string) string {
+	return KeyVerificationCode + purpose + ":" + email
+}
+
+// VerificationLimitKey 生成发送频率限制键
+func VerificationLimitKey(email string) string {
+	return KeyVerificationLimit + email
+}
+
+// VerificationAttemptsKey 生成验证尝试次数键
+func VerificationAttemptsKey(email string) string {
+	return KeyVerificationAttempts + email
 }
