@@ -108,8 +108,14 @@ func main() {
 
 	// 8. 启动服务器（异步）
 	go func() {
+		baseURL := fmt.Sprintf("http://localhost:%d", cfg.Server.Port)
 		logger.Info("HTTP 服务器启动",
 			zap.Int("port", cfg.Server.Port),
+			zap.String("url", baseURL),
+		)
+		logger.Info("API 文档地址",
+			zap.String("scalar", baseURL+"/docs"),
+			zap.String("swagger", baseURL+"/swagger/index.html"),
 		)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Fatal("HTTP 服务器启动失败", zap.Error(err))

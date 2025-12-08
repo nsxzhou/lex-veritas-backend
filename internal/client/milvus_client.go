@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/lexveritas/lex-veritas-backend/internal/config"
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/logger"
@@ -30,14 +31,23 @@ func InitMilvus(cfg *MilvusConfig) error {
 
 // connectMilvus 建立 Milvus 连接
 func connectMilvus(cfg *MilvusConfig) error {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	var err error
 	milvusClient, err = client.NewClient(ctx, client.Config{
 		Address: cfg.Addr(),
 	})
 	if err != nil {
-		return fmt.Errorf("Milvus 连接失败: %w", err)
+		return fmt.Errorf("milvus connection failed: %w", err)
+	}
+
+	// 验证连接是否真正可用（gRPC 是延迟连接）
+	_, err = milvusClient.ListCollections(ctx)
+	if err != nil {
+		milvusClient.Close()
+		milvusClient = nil
+		return fmt.Errorf("milvus connection validation failed: %w", err)
 	}
 
 	logger.Info("Milvus 连接成功",
@@ -56,7 +66,7 @@ func GetMilvusClient() client.Client {
 // MilvusHealth 健康检查
 func MilvusHealth() error {
 	if milvusClient == nil {
-		return fmt.Errorf("Milvus 未初始化")
+		return fmt.Errorf("milvus not initialized")
 	}
 	// Milvus SDK 没有直接的 Ping 方法，通过检查连接状态判断
 	return nil
@@ -75,7 +85,7 @@ func CloseMilvus() error {
 // SearchVector 向量检索
 func SearchVector(ctx context.Context, collectionName string, vectors [][]float32, topK int) ([]SearchResult, error) {
 	if milvusClient == nil {
-		return nil, fmt.Errorf("Milvus 未初始化")
+		return nil, fmt.Errorf("milvus not initialized")
 	}
 
 	// TODO: 实现具体的向量检索逻辑

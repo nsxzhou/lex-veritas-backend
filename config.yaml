@@ -10,7 +10,7 @@ server:
 
 log:
   level: "info" # debug | info | warn | error
-  format: "json" # json | console
+  format: "console" # json | console
   output: "stdout" # stdout | file
   file_path: "./logs/app.log"
   max_size: 100 # MB
@@ -18,11 +18,11 @@ log:
   max_age: 30 # days
 
 database:
-  host: "localhost"
-  port: 5432
-  user: "lexveritas"
-  password: "" # 使用环境变量: LEXVERITAS_DATABASE_PASSWORD
-  dbname: "lexveritas"
+  host: "localhost" # 使用环境变量: LEXVERITAS_DATABASE_HOST
+  port: 5432 # 使用环境变量: LEXVERITAS_DATABASE_PORT
+  user: "root" # 使用环境变量: LEXVERITAS_DATABASE_USER
+  password: "root" # 使用环境变量: LEXVERITAS_DATABASE_PASSWORD
+  dbname: "lexveritas" # 使用环境变量: LEXVERITAS_DATABASE_NAME
   sslmode: "disable"
   max_open_conns: 100
   max_idle_conns: 10
@@ -30,10 +30,10 @@ database:
   conn_max_idle_time: 10m
 
 redis:
-  host: "localhost"
-  port: 6379
+  host: "localhost" # 使用环境变量: LEXVERITAS_REDIS_HOST
+  port: 6379 # 使用环境变量: LEXVERITAS_REDIS_PORT
   password: "" # 使用环境变量: LEXVERITAS_REDIS_PASSWORD
-  db: 0
+  db: 1
   pool_size: 100
   min_idle_conns: 10
   dial_timeout: 5s
@@ -41,8 +41,8 @@ redis:
   write_timeout: 3s
 
 milvus:
-  host: "localhost"
-  port: 19530
+  host: "localhost" # 使用环境变量: LEXVERITAS_MILVUS_HOST
+  port: 19530 # 使用环境变量: LEXVERITAS_MILVUS_PORT
   collection_name: "legal_knowledge"
   dimension: 1536
 
@@ -85,12 +85,12 @@ quota:
   guest_session_ttl: 24h # 匿名会话过期时间
 
 email:
-  provider: "smtp" # smtp | resend
-  smtp_host: "smtp.qq.com"
-  smtp_port: 587
+  provider: "smtp" # smtp | resend 使用环境变量：LEXVERITAS_EMAIL_PROVIDER
+  smtp_host: "smtp.qq.com" # 使用环境变量: LEXVERITAS_EMAIL_SMTP_HOST
+  smtp_port: 465 # 使用环境变量: LEXVERITAS_EMAIL_SMTP_PORT (QQ邮箱SSL端口)
   smtp_user: "" # 使用环境变量: LEXVERITAS_EMAIL_SMTP_USER
   smtp_password: "" # 使用环境变量: LEXVERITAS_EMAIL_SMTP_PASSWORD
-  from_address: "noreply@example.com"
+  from_address: "1790146932@qq.com"
   from_name: "LexVeritas"
   resend_api_key: "" # 使用环境变量: LEXVERITAS_EMAIL_RESEND_API_KEY
 

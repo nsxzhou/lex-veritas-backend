@@ -40,7 +40,17 @@ func (s *SMTPSender) Send(ctx context.Context, to, subject, htmlBody string) err
 	m.SetBody("text/html", htmlBody)
 
 	d := gomail.NewDialer(s.host, s.port, s.user, s.password)
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: false}
+
+	// 端口 465 使用隐式 SSL，端口 587 使用 STARTTLS
+	if s.port == 465 {
+		d.SSL = true
+	} else {
+		// 端口 587/25 使用 STARTTLS
+		d.SSL = false
+		d.TLSConfig = &tls.Config{
+			ServerName: s.host,
+		}
+	}
 
 	if err := d.DialAndSend(m); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)

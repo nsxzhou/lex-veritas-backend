@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -151,13 +152,17 @@ var global *Config
 
 // Load 加载配置文件
 func Load(configPath string) (*Config, error) {
+	// 加载 .env 文件（如果存在）
+	// godotenv 会将 .env 中的变量注入到进程环境变量中
+	_ = godotenv.Load() // 忽略错误，.env 文件不存在时不影响
+
 	v := viper.New()
 
 	// 设置配置文件路径
 	v.SetConfigFile(configPath)
 	v.SetConfigType("yaml")
 
-	// 设置环境变量前缀
+	// 设置环境变量前缀和替换规则
 	v.SetEnvPrefix("LEXVERITAS")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
@@ -165,6 +170,40 @@ func Load(configPath string) (*Config, error) {
 	// 读取配置文件
 	if err := v.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("读取配置文件失败: %w", err)
+	}
+
+	// 显式绑定敏感环境变量（确保环境变量能覆盖配置文件）
+	// 格式: 环境变量 LEXVERITAS_DATABASE_PASSWORD -> database.password
+	bindEnvs := []struct {
+		key     string
+		envName string
+	}{
+		// 数据库
+		{"database.password", "DATABASE_PASSWORD"},
+		{"database.host", "DATABASE_HOST"},
+		{"database.port", "DATABASE_PORT"},
+		{"database.user", "DATABASE_USER"},
+		{"database.dbname", "DATABASE_DBNAME"},
+		// Redis
+		{"redis.password", "REDIS_PASSWORD"},
+		{"redis.host", "REDIS_HOST"},
+		{"redis.port", "REDIS_PORT"},
+		// JWT
+		{"jwt.secret", "JWT_SECRET"},
+		// 邮件
+		{"email.provider", "EMAIL_PROVIDER"},
+		{"email.smtp_host", "EMAIL_SMTP_HOST"},
+		{"email.smtp_port", "EMAIL_SMTP_PORT"},
+		{"email.smtp_user", "EMAIL_SMTP_USER"},
+		{"email.smtp_password", "EMAIL_SMTP_PASSWORD"},
+		{"email.resend_api_key", "EMAIL_RESEND_API_KEY"},
+		// Milvus
+		{"milvus.host", "MILVUS_HOST"},
+		{"milvus.port", "MILVUS_PORT"},
+	}
+
+	for _, e := range bindEnvs {
+		_ = v.BindEnv(e.key, "LEXVERITAS_"+e.envName)
 	}
 
 	// 解析配置

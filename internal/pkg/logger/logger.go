@@ -70,7 +70,22 @@ func newLogger(cfg *Config) (*zap.Logger, error) {
 	// 选择编码器格式
 	var encoder zapcore.Encoder
 	if cfg.Format == "console" {
-		encoder = zapcore.NewConsoleEncoder(encoderConfig)
+		// Console 模式使用更简洁的格式
+		consoleConfig := zapcore.EncoderConfig{
+			TimeKey:        "T",
+			LevelKey:       "L",
+			NameKey:        "N",
+			CallerKey:      "", // 隐藏 caller 使输出更简洁
+			FunctionKey:    zapcore.OmitKey,
+			MessageKey:     "M",
+			StacktraceKey:  "S",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.CapitalColorLevelEncoder, // 彩色级别
+			EncodeTime:     zapcore.TimeEncoderOfLayout("15:04:05"),
+			EncodeDuration: zapcore.StringDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		}
+		encoder = zapcore.NewConsoleEncoder(consoleConfig)
 	} else {
 		encoder = zapcore.NewJSONEncoder(encoderConfig)
 	}

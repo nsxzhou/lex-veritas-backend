@@ -1,0 +1,66 @@
+# Air 热重载配置
+# 文档: https://github.com/air-verse/air
+
+root = "."
+testdata_dir = "testdata"
+tmp_dir = "tmp"
+
+[build]
+  # 命令
+  cmd = "go build -o ./tmp/main ./cmd/server"
+  # 输出二进制文件
+  bin = "./tmp/main"
+  # 运行参数
+  args_bin = ["-config", "config.yaml"]
+  # 延迟
+  delay = 1000
+  # 排除目录
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "docs", ".git", "bin", "logs"]
+  # 排除文件
+  exclude_file = []
+  # 排除正则
+  exclude_regex = ["_test.go"]
+  # 不使用 exclude_unchanged
+  exclude_unchanged = false
+  # 跟随符号链接
+  follow_symlink = false
+  # 日志
+  full_bin = ""
+  # 包含扩展名
+  include_ext = ["go", "tpl", "tmpl", "html", "yaml", "yml"]
+  # 包含目录
+  include_dir = []
+  # 包含文件
+  include_file = []
+  # 如果文件变化立即终止
+  kill_delay = "0s"
+  # 发送中断信号
+  send_interrupt = false
+  # 构建时停止旧进程
+  stop_on_error = true
+  # 使用轮询监控
+  poll = false
+  # 轮询间隔
+  poll_interval = 500
+  # 重新运行
+  rerun = false
+  # 重新运行延迟
+  rerun_delay = 500
+
+[color]
+  app = ""
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  main_only = false
+  time = false
+
+[misc]
+  clean_on_exit = true
+
+[screen]
+  clear_on_rebuild = false
+  keep_scroll = true

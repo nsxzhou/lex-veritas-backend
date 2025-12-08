@@ -19,6 +19,7 @@ import (
 	_ "github.com/lexveritas/lex-veritas-backend/docs/swagger"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/swag"
 )
 
 // Setup 配置并返回 Gin 引擎
@@ -86,19 +87,25 @@ func Setup(cfg *config.Config) *gin.Engine {
 
 // scalarHandler 返回 Scalar API 文档页面
 func scalarHandler(c *gin.Context) {
+	// 从 swag 获取 OpenAPI JSON
+	doc, err := swag.ReadDoc("swagger")
+	if err != nil {
+		c.String(http.StatusInternalServerError, "failed to read swagger doc: "+err.Error())
+		return
+	}
+
 	htmlContent, err := scalar.ApiReferenceHTML(&scalar.Options{
-		SpecURL: "/swagger/doc.json",
+		SpecContent: doc,
 		CustomOptions: scalar.CustomOptions{
-			PageTitle: "LexVeritas API 文档",
+			PageTitle: "LexVeritas API",
 		},
 		DarkMode: true,
 	})
 	if err != nil {
-		c.String(http.StatusInternalServerError, "failed to generate API docs")
+		c.String(http.StatusInternalServerError, "failed to generate API docs: "+err.Error())
 		return
 	}
-	c.Header("Content-Type", "text/html; charset=utf-8")
-	c.String(http.StatusOK, htmlContent)
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(htmlContent))
 }
 
 // healthHandler 健康检查处理器

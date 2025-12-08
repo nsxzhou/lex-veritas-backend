@@ -41,3 +41,6 @@ config.local.yaml
 # Temporary files
 *.tmp
 *.temp
+
+# Air hot reload
+tmp/
