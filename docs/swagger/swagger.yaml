@@ -1,0 +1,352 @@
+basePath: /api/v1
+definitions:
+  github_com_lexveritas_lex-veritas-backend_internal_dto.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.LoginResponse:
+    properties:
+      token:
+        $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.TokenPair'
+      user: {}
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.PhoneLoginRequest:
+    properties:
+      code:
+        type: string
+      phone:
+        type: string
+    required:
+    - code
+    - phone
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.RefreshRequest:
+    properties:
+      refreshToken:
+        type: string
+    required:
+    - refreshToken
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.RegisterRequest:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone:
+        type: string
+    required:
+    - code
+    - email
+    - name
+    - password
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.SendCodeRequest:
+    properties:
+      email:
+        type: string
+      purpose:
+        enum:
+        - register
+        - reset_password
+        type: string
+    required:
+    - email
+    - purpose
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.TokenPair:
+    properties:
+      accessToken:
+        type: string
+      expiresIn:
+        description: 秒
+        type: integer
+      refreshToken:
+        type: string
+      tokenType:
+        description: Bearer
+        type: string
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.UserResponse:
+    properties:
+      avatar:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      lastLoginAt:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+      tokenQuota:
+        type: integer
+      tokenUsed:
+        type: integer
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: 1790146932@qq.com
+    name: LexVeritas nsxzhou
+  description: 法律智能问答系统 API
+  title: LexVeritas API
+  version: 1.0.0
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 使用邮箱和密码登录系统
+      parameters:
+      - description: 登录请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.LoginResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "401":
+          description: 邮箱或密码错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "403":
+          description: 账户被禁用或锁定
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      summary: 用户登录
+      tags:
+      - 认证
+  /auth/login/phone:
+    post:
+      consumes:
+      - application/json
+      description: 使用手机号和验证码登录系统
+      parameters:
+      - description: 手机登录请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.PhoneLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.LoginResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "401":
+          description: 验证码错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      summary: 手机验证码登录
+      tags:
+      - 认证
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: 登出当前用户，使访问令牌失效
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登出成功
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      security:
+      - Bearer: []
+      summary: 用户登出
+      tags:
+      - 认证
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前登录用户的详细信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.UserResponse'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      security:
+      - Bearer: []
+      summary: 获取当前用户
+      tags:
+      - 认证
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用刷新令牌获取新的访问令牌
+      parameters:
+      - description: 刷新令牌请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 刷新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.TokenPair'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "401":
+          description: 刷新令牌无效或已过期
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      summary: 刷新令牌
+      tags:
+      - 认证
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 使用邮箱注册新用户，需先获取验证码
+      parameters:
+      - description: 注册请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 注册成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.UserResponse'
+              type: object
+        "400":
+          description: 请求参数错误或验证码无效
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "429":
+          description: 验证码尝试次数过多
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      summary: 用户注册
+      tags:
+      - 认证
+  /auth/send-code:
+    post:
+      consumes:
+      - application/json
+      description: 发送邮箱验证码，用于注册或重置密码
+      parameters:
+      - description: 发送验证码请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.SendCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 验证码发送成功
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "429":
+          description: 请求过于频繁
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      summary: 发送验证码
+      tags:
+      - 认证
+securityDefinitions:
+  Bearer:
+    description: '输入格式: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -13,6 +13,12 @@ import (
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/email"
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/response"
 	"github.com/lexveritas/lex-veritas-backend/internal/service"
+
+	// Swagger docs
+	scalar "github.com/MarceloPetrucio/go-scalar-api-reference"
+	_ "github.com/lexveritas/lex-veritas-backend/docs/swagger"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // Setup 配置并返回 Gin 引擎
@@ -51,6 +57,12 @@ func Setup(cfg *config.Config) *gin.Engine {
 	// 初始化 Handler
 	authHandler := handler.NewAuthHandler(authSvc, verifySvc)
 
+	// ======== API 文档端点 ========
+	// Scalar UI (推荐 - 更美观)
+	r.GET("/docs", scalarHandler)
+	// 原生 Swagger UI (备用)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	// 健康检查端点
 	r.GET("/health", healthHandler)
 	r.GET("/ready", readyHandler)
@@ -70,6 +82,23 @@ func Setup(cfg *config.Config) *gin.Engine {
 	}
 
 	return r
+}
+
+// scalarHandler 返回 Scalar API 文档页面
+func scalarHandler(c *gin.Context) {
+	htmlContent, err := scalar.ApiReferenceHTML(&scalar.Options{
+		SpecURL: "/swagger/doc.json",
+		CustomOptions: scalar.CustomOptions{
+			PageTitle: "LexVeritas API 文档",
+		},
+		DarkMode: true,
+	})
+	if err != nil {
+		c.String(http.StatusInternalServerError, "failed to generate API docs")
+		return
+	}
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.String(http.StatusOK, htmlContent)
 }
 
 // healthHandler 健康检查处理器

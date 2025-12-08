@@ -23,7 +23,17 @@ func NewAuthHandler(authSvc service.AuthService, verifySvc service.VerificationS
 }
 
 // Login 邮箱密码登录
-// POST /api/v1/auth/login
+// @Summary      用户登录
+// @Description  使用邮箱和密码登录系统
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.LoginRequest true "登录请求"
+// @Success      200 {object} response.Response{data=dto.LoginResponse} "登录成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      401 {object} response.Response "邮箱或密码错误"
+// @Failure      403 {object} response.Response "账户被禁用或锁定"
+// @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -53,7 +63,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // LoginByPhone 手机验证码登录
-// POST /api/v1/auth/login/phone
+// @Summary      手机验证码登录
+// @Description  使用手机号和验证码登录系统
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.PhoneLoginRequest true "手机登录请求"
+// @Success      200 {object} response.Response{data=dto.LoginResponse} "登录成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      401 {object} response.Response "验证码错误"
+// @Router       /auth/login/phone [post]
 func (h *AuthHandler) LoginByPhone(c *gin.Context) {
 	var req dto.PhoneLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -74,7 +93,16 @@ func (h *AuthHandler) LoginByPhone(c *gin.Context) {
 }
 
 // SendCode 发送验证码
-// POST /api/v1/auth/send-code
+// @Summary      发送验证码
+// @Description  发送邮箱验证码，用于注册或重置密码
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.SendCodeRequest true "发送验证码请求"
+// @Success      200 {object} response.Response "验证码发送成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      429 {object} response.Response "请求过于频繁"
+// @Router       /auth/send-code [post]
 func (h *AuthHandler) SendCode(c *gin.Context) {
 	var req dto.SendCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -96,7 +124,16 @@ func (h *AuthHandler) SendCode(c *gin.Context) {
 }
 
 // Register 用户注册
-// POST /api/v1/auth/register
+// @Summary      用户注册
+// @Description  使用邮箱注册新用户，需先获取验证码
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.RegisterRequest true "注册请求"
+// @Success      200 {object} response.Response{data=dto.UserResponse} "注册成功"
+// @Failure      400 {object} response.Response "请求参数错误或验证码无效"
+// @Failure      429 {object} response.Response "验证码尝试次数过多"
+// @Router       /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -137,7 +174,16 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 // Refresh 刷新访问令牌
-// POST /api/v1/auth/refresh
+// @Summary      刷新令牌
+// @Description  使用刷新令牌获取新的访问令牌
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.RefreshRequest true "刷新令牌请求"
+// @Success      200 {object} response.Response{data=dto.TokenPair} "刷新成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      401 {object} response.Response "刷新令牌无效或已过期"
+// @Router       /auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req dto.RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -159,7 +205,14 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 }
 
 // Logout 登出
-// POST /api/v1/auth/logout
+// @Summary      用户登出
+// @Description  登出当前用户，使访问令牌失效
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Success      200 {object} response.Response "登出成功"
+// @Router       /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
 	if len(authHeader) > 7 {
@@ -171,7 +224,16 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 // Me 获取当前用户信息
-// GET /api/v1/auth/me
+// @Summary      获取当前用户
+// @Description  获取当前登录用户的详细信息
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Success      200 {object} response.Response{data=dto.UserResponse} "获取成功"
+// @Failure      401 {object} response.Response "未授权"
+// @Failure      404 {object} response.Response "用户不存在"
+// @Router       /auth/me [get]
 func (h *AuthHandler) Me(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	if userID == "" {

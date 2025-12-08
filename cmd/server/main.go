@@ -1,4 +1,19 @@
 // Package main 提供 LexVeritas 后端服务入口
+//
+// @title           LexVeritas API
+// @version         1.0.0
+// @description     法律智能问答系统 API
+//
+// @contact.name    LexVeritas nsxzhou
+// @contact.email   1790146932@qq.com
+//
+// @host            localhost:8080
+// @BasePath        /api/v1
+//
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description 输入格式: Bearer {token}
 package main
 
 import (
