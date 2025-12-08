@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	ErrUserNotFound = errors.New("user not found")
+	ErrUserNotFound = errors.New("用户不存在")
 )
 
 // UserRepository 用户数据访问接口

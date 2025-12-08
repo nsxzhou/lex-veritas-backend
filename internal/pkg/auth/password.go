@@ -15,10 +15,11 @@ const (
 )
 
 var (
-	ErrPasswordTooShort   = errors.New("password must be at least 8 characters")
-	ErrPasswordTooWeak    = errors.New("password must contain uppercase, lowercase, digit and special character")
-	ErrPasswordHashFailed = errors.New("failed to hash password")
-	ErrPasswordMismatch   = errors.New("password does not match")
+	ErrPasswordTooShort   = errors.New("密码长度至少为8位")
+	ErrPasswordTooWeak1   = errors.New("密码必须包含大小写字母、数字和特殊字符")
+	ErrPasswordTooWeak2   = errors.New("密码必须包含小写字母、数字")
+	ErrPasswordHashFailed = errors.New("密码哈希失败")
+	ErrPasswordMismatch   = errors.New("密码不匹配")
 )
 
 // PasswordConfig 密码配置
@@ -65,27 +66,31 @@ func ValidatePasswordStrength(password string) error {
 	}
 
 	var (
-		hasUpper   bool
-		hasLower   bool
-		hasDigit   bool
-		hasSpecial bool
+		//hasUpper   bool
+		hasLower bool
+		hasDigit bool
+		//hasSpecial bool
 	)
 
 	for _, char := range password {
 		switch {
-		case unicode.IsUpper(char):
-			hasUpper = true
+		// case unicode.IsUpper(char):
+		// 	hasUpper = true
 		case unicode.IsLower(char):
 			hasLower = true
 		case unicode.IsDigit(char):
 			hasDigit = true
-		case unicode.IsPunct(char) || unicode.IsSymbol(char):
-			hasSpecial = true
+			// case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			// 	hasSpecial = true
 		}
 	}
 
-	if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
-		return ErrPasswordTooWeak
+	// if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
+	// 	return ErrPasswordTooWeak
+	// }
+
+	if !hasLower || !hasDigit {
+		return ErrPasswordTooWeak2
 	}
 
 	return nil

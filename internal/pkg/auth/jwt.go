@@ -9,15 +9,15 @@ import (
 )
 
 var (
-	ErrInvalidToken     = errors.New("invalid token")
-	ErrTokenExpired     = errors.New("token expired")
-	ErrInvalidSignature = errors.New("invalid signature")
+	ErrInvalidToken     = errors.New("无效的令牌")
+	ErrTokenExpired     = errors.New("令牌已过期")
+	ErrInvalidSignature = errors.New("无效的签名")
 )
 
 // Claims JWT 声明结构
 type Claims struct {
-	UserID   string `json:"uid"`
-	Role     string `json:"role,omitempty"`
+	UserID string `json:"uid"`
+	Role   string `json:"role,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -46,9 +46,9 @@ func NewJWTManager(cfg *JWTConfig) *JWTManager {
 // GenerateAccessToken 生成访问令牌
 func (m *JWTManager) GenerateAccessToken(userID, role string) (string, error) {
 	now := time.Now()
-	claims := &Claims{		
-		UserID:   userID,
-			Role:     role,
+	claims := &Claims{
+		UserID: userID,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        uuid.New().String(),
 			Issuer:    m.config.Issuer,

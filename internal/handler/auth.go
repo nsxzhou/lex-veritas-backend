@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lexveritas/lex-veritas-backend/internal/dto"
 	"github.com/lexveritas/lex-veritas-backend/internal/middleware"
+	"github.com/lexveritas/lex-veritas-backend/internal/pkg/auth"
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/response"
 	"github.com/lexveritas/lex-veritas-backend/internal/service"
 )
@@ -37,7 +38,7 @@ func NewAuthHandler(authSvc service.AuthService, verifySvc service.VerificationS
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "invalid request: "+err.Error())
+		response.BadRequest(c, "请求参数错误: "+err.Error())
 		return
 	}
 
@@ -45,11 +46,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if err != nil {
 		switch err {
 		case service.ErrInvalidCredentials:
-			response.Unauthorized(c, "invalid email or password")
+			response.Unauthorized(c, "邮箱或密码错误")
 		case service.ErrUserDisabled:
-			response.Forbidden(c, "account is disabled")
+			response.Forbidden(c, "账户已被禁用")
 		case service.ErrAccountLocked:
-			response.Forbidden(c, "account is locked, please try again later")
+			response.Forbidden(c, "账户已被锁定，请稍后再试")
 		default:
 			response.InternalError(c, err)
 		}
@@ -76,7 +77,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) LoginByPhone(c *gin.Context) {
 	var req dto.PhoneLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "invalid request: "+err.Error())
+		response.BadRequest(c, "请求参数错误: "+err.Error())
 		return
 	}
 
@@ -106,7 +107,7 @@ func (h *AuthHandler) LoginByPhone(c *gin.Context) {
 func (h *AuthHandler) SendCode(c *gin.Context) {
 	var req dto.SendCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "invalid request: "+err.Error())
+		response.BadRequest(c, "请求参数错误: "+err.Error())
 		return
 	}
 
@@ -120,7 +121,7 @@ func (h *AuthHandler) SendCode(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{"message": "verification code sent"})
+	response.Success(c, gin.H{"message": "验证码已发送"})
 }
 
 // Register 用户注册
@@ -137,7 +138,7 @@ func (h *AuthHandler) SendCode(c *gin.Context) {
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "invalid request: "+err.Error())
+		response.BadRequest(c, "请求参数错误: "+err.Error())
 		return
 	}
 
@@ -158,19 +159,16 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	if err != nil {
 		switch err {
 		case service.ErrEmailAlreadyExists:
-			response.BadRequest(c, "email already registered")
+			response.BadRequest(c, "邮箱已被注册")
+		case auth.ErrPasswordTooShort, auth.ErrPasswordTooWeak1, auth.ErrPasswordTooWeak2:
+			response.BadRequest(c, err.Error())
 		default:
-			// Password validation errors
-			if err.Error() == "password too short" || err.Error() == "password too weak" {
-				response.BadRequest(c, err.Error())
-			} else {
-				response.InternalError(c, err)
-			}
+			response.InternalError(c, err)
 		}
 		return
 	}
 
-	response.SuccessWithMessage(c, "registration successful", user)
+	response.SuccessWithMessage(c, "注册成功", user)
 }
 
 // Refresh 刷新访问令牌
@@ -194,7 +192,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	tokenPair, err := h.authSvc.RefreshToken(c.Request.Context(), req.RefreshToken)
 	if err != nil {
 		if err == service.ErrRefreshTokenInvalid {
-			response.Unauthorized(c, "invalid or expired refresh token")
+			response.Unauthorized(c, "刷新令牌无效或已过期")
 		} else {
 			response.InternalError(c, err)
 		}
@@ -220,7 +218,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		h.authSvc.Logout(c.Request.Context(), token)
 	}
 
-	response.SuccessWithMessage(c, "logged out successfully", nil)
+	response.SuccessWithMessage(c, "登出成功", nil)
 }
 
 // Me 获取当前用户信息
@@ -237,7 +235,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 func (h *AuthHandler) Me(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	if userID == "" {
-		response.Unauthorized(c, "not authenticated")
+		response.Unauthorized(c, "未认证")
 		return
 	}
 

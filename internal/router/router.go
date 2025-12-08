@@ -80,6 +80,14 @@ func Setup(cfg *config.Config) *gin.Engine {
 			authRoutes.POST("/register", authHandler.Register)
 			authRoutes.POST("/refresh", authHandler.Refresh)
 		}
+
+		// ======== 受保护的认证路由 (需登录) ========
+		protectedAuth := v1.Group("/auth")
+		protectedAuth.Use(middleware.JWTAuth(authSvc))
+		{
+			protectedAuth.GET("/me", authHandler.Me)
+			protectedAuth.POST("/logout", authHandler.Logout)
+		}
 	}
 
 	return r

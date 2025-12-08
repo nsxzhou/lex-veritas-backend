@@ -17,12 +17,12 @@ import (
 )
 
 var (
-	ErrUserNotFound        = errors.New("user not found")
-	ErrUserDisabled        = errors.New("user is disabled or banned")
-	ErrInvalidCredentials  = errors.New("invalid credentials")
-	ErrAccountLocked       = errors.New("account is locked due to too many failed attempts")
-	ErrRefreshTokenInvalid = errors.New("refresh token is invalid or expired")
-	ErrEmailAlreadyExists  = errors.New("email already registered")
+	ErrUserNotFound        = errors.New("用户不存在")
+	ErrUserDisabled        = errors.New("用户已被禁用或封禁")
+	ErrInvalidCredentials  = errors.New("邮箱或密码错误")
+	ErrAccountLocked       = errors.New("由于尝试次数过多，账户已被锁定")
+	ErrRefreshTokenInvalid = errors.New("刷新令牌无效或已过期")
+	ErrEmailAlreadyExists  = errors.New("邮箱已被注册")
 )
 
 // refreshTokenData 刷新令牌数据 (存储在 Redis)
@@ -156,7 +156,7 @@ func (s *authService) LoginByEmail(ctx context.Context, email, password string) 
 
 // LoginByPhone 手机验证码登录 (占位实现)
 func (s *authService) LoginByPhone(ctx context.Context, phone, code string) (*dto.TokenPair, *model.User, error) {
-	return nil, nil, errors.New("phone login not implemented")
+	return nil, nil, errors.New("手机验证码登录尚未实现")
 }
 
 // RefreshToken 刷新令牌

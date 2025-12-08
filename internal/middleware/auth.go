@@ -29,7 +29,7 @@ func JWTAuth(validator TokenValidator) gin.HandlerFunc {
 		// 从 Header 获取 token
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			response.Unauthorized(c, "missing authorization header")
+			response.Unauthorized(c, "缺少认证头")
 			c.Abort()
 			return
 		}
@@ -37,7 +37,7 @@ func JWTAuth(validator TokenValidator) gin.HandlerFunc {
 		// 解析 Bearer token
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-			response.Unauthorized(c, "invalid authorization format")
+			response.Unauthorized(c, "认证格式错误")
 			c.Abort()
 			return
 		}
@@ -48,9 +48,9 @@ func JWTAuth(validator TokenValidator) gin.HandlerFunc {
 		claims, err := validator.ValidateAccessToken(tokenString)
 		if err != nil {
 			if err == auth.ErrTokenExpired {
-				response.Unauthorized(c, "token expired")
+				response.Unauthorized(c, "令牌已过期")
 			} else {
-				response.Unauthorized(c, "invalid token")
+				response.Unauthorized(c, "无效的令牌")
 			}
 			c.Abort()
 			return
@@ -58,7 +58,7 @@ func JWTAuth(validator TokenValidator) gin.HandlerFunc {
 
 		// 检查 token 是否在黑名单中
 		if validator.IsTokenBlacklisted(c.Request.Context(), claims.ID) {
-			response.Unauthorized(c, "token has been revoked")
+			response.Unauthorized(c, "令牌已被撤销")
 			c.Abort()
 			return
 		}
@@ -104,7 +104,7 @@ func RequireRole(roles ...model.UserRole) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roleStr, exists := c.Get(ContextKeyRole)
 		if !exists {
-			response.Forbidden(c, "role not found in context")
+			response.Forbidden(c, "上下文中未找到角色信息")
 			c.Abort()
 			return
 		}
@@ -117,7 +117,7 @@ func RequireRole(roles ...model.UserRole) gin.HandlerFunc {
 			}
 		}
 
-		response.Forbidden(c, "insufficient permissions")
+		response.Forbidden(c, "权限不足")
 		c.Abort()
 	}
 }
