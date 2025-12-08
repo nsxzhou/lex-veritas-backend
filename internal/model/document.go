@@ -9,8 +9,7 @@ import (
 
 // Document 知识库文档
 type Document struct {
-	ID       string `json:"id" gorm:"type:varchar(36);primaryKey"`
-	TenantID string `json:"tenantId" gorm:"type:varchar(36);index;not null"`
+	ID string `json:"id" gorm:"type:varchar(36);primaryKey"`
 
 	// 基础信息
 	Name         string       `json:"name" gorm:"type:varchar(255);not null"`

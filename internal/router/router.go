@@ -5,10 +5,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lexveritas/lex-veritas-backend/internal/config"
+	"github.com/lexveritas/lex-veritas-backend/internal/handler"
 	"github.com/lexveritas/lex-veritas-backend/internal/middleware"
+	"github.com/lexveritas/lex-veritas-backend/internal/pkg/auth"
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/cache"
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/database"
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/response"
+	"github.com/lexveritas/lex-veritas-backend/internal/service"
 )
 
 // Setup 配置并返回 Gin 引擎
@@ -25,6 +28,22 @@ func Setup(cfg *config.Config) *gin.Engine {
 	r.Use(middleware.CORS(&cfg.CORS))
 	r.Use(middleware.RateLimit(&cfg.RateLimit))
 
+	// 初始化认证服务
+	authSvc := service.NewAuthService(
+		&auth.JWTConfig{
+			Secret:        cfg.JWT.Secret,
+			AccessExpire:  cfg.JWT.AccessExpire,
+			RefreshExpire: cfg.JWT.RefreshExpire,
+			Issuer:        cfg.JWT.Issuer,
+		},
+		&auth.PasswordConfig{
+			BcryptCost: cfg.Auth.BcryptCost,
+		},
+	)
+
+	// 初始化 Handler
+	authHandler := handler.NewAuthHandler(authSvc)
+
 	// 健康检查端点
 	r.GET("/health", healthHandler)
 	r.GET("/ready", readyHandler)
@@ -32,75 +51,84 @@ func Setup(cfg *config.Config) *gin.Engine {
 	// API v1 路由组
 	v1 := r.Group("/api/v1")
 	{
-		// 认证路由
-		auth := v1.Group("/auth")
+		// ======== 认证路由 (无需登录) ========
+		authRoutes := v1.Group("/auth")
 		{
-			auth.POST("/login", notImplemented)
-			auth.POST("/login/phone", notImplemented)
-			auth.POST("/send-code", notImplemented)
-			auth.POST("/register", notImplemented)
-			auth.GET("/me", notImplemented)
+			authRoutes.POST("/login", authHandler.Login)
+			authRoutes.POST("/login/phone", authHandler.LoginByPhone)
+			authRoutes.POST("/send-code", authHandler.SendCode)
+			authRoutes.POST("/register", authHandler.Register)
+			authRoutes.POST("/refresh", authHandler.Refresh)
 		}
 
-		// 聊天路由
-		chat := v1.Group("/chat")
+		// ======== 需要认证的路由 ========
+		authenticated := v1.Group("")
+		authenticated.Use(middleware.JWTAuth(authSvc))
 		{
-			chat.POST("", notImplemented)
-			chat.GET("/sessions", notImplemented)
-			chat.GET("/sessions/:id", notImplemented)
-			chat.POST("/sessions", notImplemented)
-			chat.DELETE("/sessions/:id", notImplemented)
-		}
+			// 认证相关
+			authenticated.GET("/auth/me", authHandler.Me)
+			authenticated.POST("/auth/logout", authHandler.Logout)
 
-		// 知识库路由
-		knowledge := v1.Group("/knowledge")
-		{
-			knowledge.GET("/documents", notImplemented)
-			knowledge.POST("/documents", notImplemented)
-			knowledge.DELETE("/documents/:id", notImplemented)
-			knowledge.POST("/documents/mint", notImplemented)
-		}
+			// 聊天路由
+			chat := authenticated.Group("/chat")
+			{
+				chat.POST("", notImplemented)
+				chat.GET("/sessions", notImplemented)
+				chat.GET("/sessions/:id", notImplemented)
+				chat.POST("/sessions", notImplemented)
+				chat.DELETE("/sessions/:id", notImplemented)
+			}
 
-		// 统计路由
-		stats := v1.Group("/stats")
-		{
-			stats.GET("/overview", notImplemented)
-			stats.GET("/query-volume", notImplemented)
-			stats.GET("/recent-activity", notImplemented)
-		}
+			// 知识库路由
+			knowledge := authenticated.Group("/knowledge")
+			{
+				knowledge.GET("/documents", notImplemented)
+				knowledge.POST("/documents", notImplemented)
+				knowledge.DELETE("/documents/:id", notImplemented)
+				knowledge.POST("/documents/mint", notImplemented)
+			}
 
-		// 区块链存证路由
-		proof := v1.Group("/proof")
-		{
-			proof.GET("/merkle-tree", notImplemented)
-			proof.GET("/recent", notImplemented)
-			proof.POST("/verify/:chunkId", notImplemented)
-			proof.GET("/stats", notImplemented)
-		}
+			// 统计路由
+			stats := authenticated.Group("/stats")
+			{
+				stats.GET("/overview", notImplemented)
+				stats.GET("/query-volume", notImplemented)
+				stats.GET("/recent-activity", notImplemented)
+			}
 
-		// 审计日志路由
-		audit := v1.Group("/audit")
-		{
-			audit.GET("/logs", notImplemented)
-			audit.POST("/logs/:id/resolve", notImplemented)
-		}
+			// 区块链存证路由
+			proof := authenticated.Group("/proof")
+			{
+				proof.GET("/merkle-tree", notImplemented)
+				proof.GET("/recent", notImplemented)
+				proof.POST("/verify/:chunkId", notImplemented)
+				proof.GET("/stats", notImplemented)
+			}
 
-		// 用户管理路由
-		users := v1.Group("/users")
-		{
-			users.GET("", notImplemented)
-			users.GET("/:id", notImplemented)
-			users.PUT("/:id", notImplemented)
-			users.DELETE("/:id", notImplemented)
-			users.GET("/:id/history", notImplemented)
-			users.GET("/:id/token-usage", notImplemented)
-		}
+			// 审计日志路由
+			audit := authenticated.Group("/audit")
+			{
+				audit.GET("/logs", notImplemented)
+				audit.POST("/logs/:id/resolve", notImplemented)
+			}
 
-		// 系统设置路由
-		settings := v1.Group("/settings")
-		{
-			settings.GET("", notImplemented)
-			settings.PUT("", notImplemented)
+			// 用户管理路由 (需要管理员权限)
+			users := authenticated.Group("/users")
+			{
+				users.GET("", notImplemented)
+				users.GET("/:id", notImplemented)
+				users.PUT("/:id", notImplemented)
+				users.DELETE("/:id", notImplemented)
+				users.GET("/:id/history", notImplemented)
+				users.GET("/:id/token-usage", notImplemented)
+			}
+
+			// 系统设置路由
+			settings := authenticated.Group("/settings")
+			{
+				settings.GET("", notImplemented)
+				settings.PUT("", notImplemented)
+			}
 		}
 	}
 

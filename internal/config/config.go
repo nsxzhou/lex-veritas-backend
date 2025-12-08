@@ -16,6 +16,7 @@ type Config struct {
 	Redis     RedisConfig     `mapstructure:"redis"`
 	Milvus    MilvusConfig    `mapstructure:"milvus"`
 	JWT       JWTConfig       `mapstructure:"jwt"`
+	Auth      AuthConfig      `mapstructure:"auth"`
 	CORS      CORSConfig      `mapstructure:"cors"`
 	RateLimit RateLimitConfig `mapstructure:"ratelimit"`
 }
@@ -95,9 +96,17 @@ func (c *MilvusConfig) Addr() string {
 
 // JWTConfig JWT 认证配置
 type JWTConfig struct {
-	Secret string        `mapstructure:"secret"`
-	Expire time.Duration `mapstructure:"expire"`
-	Issuer string        `mapstructure:"issuer"`
+	Secret        string        `mapstructure:"secret"`
+	AccessExpire  time.Duration `mapstructure:"access_expire"`
+	RefreshExpire time.Duration `mapstructure:"refresh_expire"`
+	Issuer        string        `mapstructure:"issuer"`
+}
+
+// AuthConfig 认证配置
+type AuthConfig struct {
+	BcryptCost       int           `mapstructure:"bcrypt_cost"`
+	MaxLoginAttempts int           `mapstructure:"max_login_attempts"`
+	LockoutDuration  time.Duration `mapstructure:"lockout_duration"`
 }
 
 // CORSConfig CORS 跨域配置

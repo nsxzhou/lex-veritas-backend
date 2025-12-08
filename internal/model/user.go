@@ -11,9 +11,6 @@ import (
 type User struct {
 	ID string `json:"id" gorm:"type:varchar(36);primaryKey"`
 
-	// 当前活跃租户
-	CurrentTenantID string `json:"currentTenantId,omitempty" gorm:"type:varchar(36);index"`
-
 	// 基础信息
 	Email        string `json:"email" gorm:"type:varchar(255);uniqueIndex;not null"`
 	Phone        string `json:"phone,omitempty" gorm:"type:varchar(20);uniqueIndex"`
@@ -21,9 +18,13 @@ type User struct {
 	Name         string `json:"name" gorm:"type:varchar(100)"`
 	Avatar       string `json:"avatar,omitempty" gorm:"type:varchar(500)"`
 
-	// 全局角色 (平台级)
+	// 角色与状态
 	Role   UserRole   `json:"role" gorm:"type:varchar(20);default:'user'"`
 	Status UserStatus `json:"status" gorm:"type:varchar(20);default:'active'"`
+
+	// 额度管理
+	TokenQuota int64 `json:"tokenQuota" gorm:"default:100000"` // 默认 10 万 tokens
+	TokenUsed  int64 `json:"tokenUsed" gorm:"default:0"`
 
 	// 时间戳
 	LastLoginAt *time.Time     `json:"lastLoginAt,omitempty"`
@@ -33,7 +34,6 @@ type User struct {
 
 	// 关联
 	OAuthAccounts []OAuthAccount `json:"oauthAccounts,omitempty" gorm:"foreignKey:UserID"`
-	Tenants       []Tenant       `json:"-" gorm:"many2many:tenant_members;"`
 }
 
 // OAuthAccount OAuth 第三方登录账户

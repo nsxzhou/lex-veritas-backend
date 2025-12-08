@@ -30,15 +30,9 @@ func RateLimit(cfg *config.RateLimitConfig) gin.HandlerFunc {
 		limiter := getLimiter(ip, cfg.Rate, cfg.Burst)
 
 		if !limiter.Allow() {
-			requestID := ""
-			if id, exists := c.Get("request_id"); exists {
-				requestID, _ = id.(string)
-			}
-
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, response.Response{
-				Code:      int(errors.CodeTooManyRequests),
-				Message:   "请求过于频繁，请稍后重试",
-				RequestID: requestID,
+				Code:    int(errors.CodeTooManyRequests),
+				Message: "请求过于频繁，请稍后重试",
 			})
 			return
 		}

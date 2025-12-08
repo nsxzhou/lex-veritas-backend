@@ -7,7 +7,6 @@ type TokenUsage struct {
 	ID int64 `json:"id" gorm:"primaryKey;autoIncrement"`
 
 	// 归属
-	TenantID  string `json:"tenantId" gorm:"type:varchar(36);index;not null"`
 	UserID    string `json:"userId" gorm:"type:varchar(36);index;not null"`
 	SessionID string `json:"sessionId,omitempty" gorm:"type:varchar(36);index"`
 
@@ -41,7 +40,6 @@ type TokenUsageDaily struct {
 	ID int64 `json:"id" gorm:"primaryKey;autoIncrement"`
 
 	// 维度
-	TenantID    string    `json:"tenantId" gorm:"type:varchar(36);index;not null"`
 	UserID      string    `json:"userId,omitempty" gorm:"type:varchar(36);index"`
 	APIEndpoint string    `json:"apiEndpoint,omitempty" gorm:"type:varchar(100)"`
 	Model       string    `json:"model,omitempty" gorm:"type:varchar(50)"`

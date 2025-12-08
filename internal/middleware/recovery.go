@@ -30,9 +30,8 @@ func Recovery() gin.HandlerFunc {
 
 				// 返回错误响应
 				c.AbortWithStatusJSON(http.StatusInternalServerError, response.Response{
-					Code:      int(errors.CodeInternalError),
-					Message:   "服务器内部错误",
-					RequestID: requestID,
+					Code:    int(errors.CodeInternalError),
+					Message: "服务器内部错误",
 				})
 			}
 		}()

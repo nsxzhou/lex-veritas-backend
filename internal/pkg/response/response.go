@@ -81,12 +81,20 @@ func BadRequest(c *gin.Context, message string) {
 }
 
 // Unauthorized 未授权响应
-func Unauthorized(c *gin.Context) {
+func Unauthorized(c *gin.Context, message ...string) {
+	if len(message) > 0 && message[0] != "" {
+		ErrorWithMessage(c, errors.CodeUnauthorized, message[0])
+		return
+	}
 	ErrorWithCode(c, errors.CodeUnauthorized)
 }
 
 // Forbidden 权限不足响应
-func Forbidden(c *gin.Context) {
+func Forbidden(c *gin.Context, message ...string) {
+	if len(message) > 0 && message[0] != "" {
+		ErrorWithMessage(c, errors.CodeForbidden, message[0])
+		return
+	}
 	ErrorWithCode(c, errors.CodeForbidden)
 }
 

@@ -9,11 +9,14 @@ import (
 
 // ChatSession 聊天会话
 type ChatSession struct {
-	ID       string `json:"id" gorm:"type:varchar(36);primaryKey"`
-	TenantID string `json:"tenantId" gorm:"type:varchar(36);index;not null"`
-	UserID   string `json:"userId" gorm:"type:varchar(36);index;not null"`
-	Title    string `json:"title" gorm:"type:varchar(200)"`
-	Summary  string `json:"summary,omitempty" gorm:"type:text"`
+	ID     string `json:"id" gorm:"type:varchar(36);primaryKey"`
+	UserID string `json:"userId,omitempty" gorm:"type:varchar(36);index"` // 登录用户 ID (可选)
+
+	// 匿名用户标识
+	GuestSessionID string `json:"guestSessionId,omitempty" gorm:"type:varchar(36);index"`
+
+	Title   string `json:"title" gorm:"type:varchar(200)"`
+	Summary string `json:"summary,omitempty" gorm:"type:text"`
 
 	// 统计
 	MessageCount int `json:"messageCount" gorm:"default:0"`
