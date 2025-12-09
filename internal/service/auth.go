@@ -46,6 +46,10 @@ type AuthService interface {
 	// 用户信息
 	GetCurrentUser(ctx context.Context, userID string) (*model.User, error)
 
+	// OAuth 登录
+	OAuthLogin(ctx context.Context, provider, code string) (*dto.TokenPair, *model.User, error)
+	OAuthCallback(ctx context.Context, provider, code, state string) (*dto.TokenPair, *model.User, error)
+
 	// Token 验证
 	ValidateAccessToken(token string) (*auth.Claims, error)
 	IsTokenBlacklisted(ctx context.Context, jti string) bool
@@ -287,4 +291,26 @@ func (s *authService) clearLoginAttempts(ctx context.Context, identifier string)
 func hashToken(token string) string {
 	h := sha256.Sum256([]byte(token))
 	return hex.EncodeToString(h[:])
+}
+
+// ========================= OAuth 登录 (占位实现) =========================
+
+// OAuthLogin OAuth 登录重定向 (占位实现)
+func (s *authService) OAuthLogin(ctx context.Context, provider, code string) (*dto.TokenPair, *model.User, error) {
+	// TODO: 实现 OAuth 登录逻辑
+	// 1. 根据 provider 构建 OAuth 授权 URL
+	// 2. 重定向用户到第三方授权页面
+	return nil, nil, errors.New("OAuth 登录尚未实现,支持的 provider: google, github, wechat")
+}
+
+// OAuthCallback OAuth 回调处理 (占位实现)
+func (s *authService) OAuthCallback(ctx context.Context, provider, code, state string) (*dto.TokenPair, *model.User, error) {
+	// TODO: 实现 OAuth 回调逻辑
+	// 1. 验证 state 防止 CSRF
+	// 2. 使用 code 换取 access_token
+	// 3. 获取用户信息
+	// 4. 查询或创建本地用户
+	// 5. 创建或更新 OAuthAccount
+	// 6. 生成 JWT token
+	return nil, nil, errors.New("OAuth 回调处理尚未实现")
 }

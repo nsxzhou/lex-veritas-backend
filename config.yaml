@@ -50,7 +50,7 @@ milvus:
 
 jwt:
   secret: "" # 使用环境变量: LEXVERITAS_JWT_SECRET
-  access_expire: 15m
+  access_expire: 60m
   refresh_expire: 168h # 7 days
   issuer: "lex-veritas"
 

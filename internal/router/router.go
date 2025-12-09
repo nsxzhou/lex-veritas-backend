@@ -55,8 +55,13 @@ func Setup(cfg *config.Config) *gin.Engine {
 	// 初始化验证码服务
 	verifySvc := service.NewVerificationService(emailSender, &cfg.Verification)
 
+	// 初始化用户服务
+	userSvc := service.NewUserService()
+
 	// 初始化 Handler
 	authHandler := handler.NewAuthHandler(authSvc, verifySvc)
+	userHandler := handler.NewUserHandler(userSvc)
+	adminHandler := handler.NewAdminHandler(userSvc)
 
 	// ======== API 文档端点 ========
 	// Scalar UI (推荐 - 更美观)
@@ -79,6 +84,9 @@ func Setup(cfg *config.Config) *gin.Engine {
 			authRoutes.POST("/send-code", authHandler.SendCode)
 			authRoutes.POST("/register", authHandler.Register)
 			authRoutes.POST("/refresh", authHandler.Refresh)
+			// OAuth 登录路由
+			authRoutes.GET("/oauth/:provider", authHandler.OAuthLogin)
+			authRoutes.GET("/oauth/:provider/callback", authHandler.OAuthCallback)
 		}
 
 		// ======== 受保护的认证路由 (需登录) ========
@@ -87,6 +95,28 @@ func Setup(cfg *config.Config) *gin.Engine {
 		{
 			protectedAuth.GET("/me", authHandler.Me)
 			protectedAuth.POST("/logout", authHandler.Logout)
+		}
+
+		// ======== 用户自服务路由 (需登录) ========
+		usersRoutes := v1.Group("/users")
+		usersRoutes.Use(middleware.JWTAuth(authSvc))
+		{
+			usersRoutes.GET("/me/quota", userHandler.GetMyQuota)
+			usersRoutes.PUT("/me", userHandler.UpdateProfile)
+			usersRoutes.PUT("/me/password", userHandler.ChangePassword)
+		}
+
+		// ======== 管理员路由 (需管理员权限) ========
+		adminRoutes := v1.Group("/admin")
+		adminRoutes.Use(middleware.JWTAuth(authSvc))
+		adminRoutes.Use(middleware.RequireAdmin())
+		{
+			adminRoutes.GET("/users", adminHandler.ListUsers)
+			adminRoutes.GET("/users/:id", adminHandler.GetUser)
+			adminRoutes.PUT("/users/:id/status", adminHandler.UpdateStatus)
+			adminRoutes.PUT("/users/:id/role", adminHandler.UpdateRole)
+			adminRoutes.PUT("/users/:id/quota", adminHandler.AdjustQuota)
+			adminRoutes.DELETE("/users/:id", adminHandler.DeleteUser)
 		}
 	}
 

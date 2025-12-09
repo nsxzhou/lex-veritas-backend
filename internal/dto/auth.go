@@ -70,3 +70,20 @@ type UserResponse struct {
 	LastLogin  *time.Time `json:"lastLoginAt,omitempty"`
 	CreatedAt  time.Time  `json:"createdAt"`
 }
+
+// ============================================================================
+// 用户自服务 DTO
+// ============================================================================
+
+// ChangePasswordRequest 修改密码请求
+type ChangePasswordRequest struct {
+	OldPassword string `json:"oldPassword" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required,min=8"`
+}
+
+// UpdateProfileRequest 更新用户资料
+type UpdateProfileRequest struct {
+	Name   *string `json:"name,omitempty"`   // 允许空字符串以支持清空操作
+	Phone  *string `json:"phone,omitempty"`  // 允许空字符串以支持清空操作
+	Avatar *string `json:"avatar,omitempty"` // 允许空字符串以支持清空操作
+}

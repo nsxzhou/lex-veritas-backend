@@ -1,5 +1,27 @@
 basePath: /api/v1
 definitions:
+  github_com_lexveritas_lex-veritas-backend_internal_dto.AdjustQuotaRequest:
+    properties:
+      newQuota:
+        minimum: 0
+        type: integer
+      userId:
+        type: string
+    required:
+    - newQuota
+    - userId
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.ChangePasswordRequest:
+    properties:
+      newPassword:
+        minLength: 8
+        type: string
+      oldPassword:
+        type: string
+    required:
+    - newPassword
+    - oldPassword
+    type: object
   github_com_lexveritas_lex-veritas-backend_internal_dto.LoginRequest:
     properties:
       email:
@@ -80,6 +102,66 @@ definitions:
         description: Bearer
         type: string
     type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.UpdateProfileRequest:
+    properties:
+      avatar:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      phone:
+        type: string
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.UpdateRoleRequest:
+    properties:
+      role:
+        enum:
+        - user
+        - admin
+        - super_admin
+        type: string
+    required:
+    - role
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.UpdateStatusRequest:
+    properties:
+      status:
+        enum:
+        - active
+        - inactive
+        - banned
+        type: string
+    required:
+    - status
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.UsageStats:
+    properties:
+      remaining:
+        type: integer
+      tokenQuota:
+        type: integer
+      tokenUsed:
+        type: integer
+      usageRate:
+        description: 0-1
+        type: number
+      userId:
+        type: string
+    type: object
+  github_com_lexveritas_lex-veritas-backend_internal_dto.UserListResponse:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.UserResponse'
+        type: array
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+    type: object
   github_com_lexveritas_lex-veritas-backend_internal_dto.UserResponse:
     properties:
       avatar:
@@ -122,6 +204,284 @@ info:
   title: LexVeritas API
   version: 1.0.0
 paths:
+  /admin/users:
+    get:
+      consumes:
+      - application/json
+      description: 分页查询用户列表,支持按邮箱、角色、状态筛选
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 邮箱筛选
+        in: query
+        name: email
+        type: string
+      - description: 角色筛选
+        enum:
+        - user
+        - admin
+        - super_admin
+        in: query
+        name: role
+        type: string
+      - description: 状态筛选
+        enum:
+        - active
+        - inactive
+        - banned
+        in: query
+        name: status
+        type: string
+      - description: 关键词搜索(邮箱或姓名)
+        in: query
+        name: keyword
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.UserListResponse'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "403":
+          description: 权限不足
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      security:
+      - Bearer: []
+      summary: 获取用户列表
+      tags:
+      - 管理员
+  /admin/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 软删除指定用户
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "403":
+          description: 权限不足
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      security:
+      - Bearer: []
+      summary: 删除用户
+      tags:
+      - 管理员
+    get:
+      consumes:
+      - application/json
+      description: 根据用户ID获取详细信息
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.UserResponse'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "403":
+          description: 权限不足
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      security:
+      - Bearer: []
+      summary: 获取用户详情
+      tags:
+      - 管理员
+  /admin/users/{id}/quota:
+    put:
+      consumes:
+      - application/json
+      description: 调整指定用户的Token配额
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 配额调整请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.AdjustQuotaRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 调整成功
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "403":
+          description: 权限不足
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      security:
+      - Bearer: []
+      summary: 调整用户Token配额
+      tags:
+      - 管理员
+  /admin/users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      description: 修改用户角色,需要super_admin权限
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 角色更新请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 修改成功
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "403":
+          description: 权限不足
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      security:
+      - Bearer: []
+      summary: 修改用户角色
+      tags:
+      - 管理员
+  /admin/users/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: 修改用户的激活状态
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 状态更新请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.UpdateStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 修改成功
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "403":
+          description: 权限不足
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      security:
+      - Bearer: []
+      summary: 修改用户状态
+      tags:
+      - 管理员
   /auth/login:
     post:
       consumes:
@@ -243,6 +603,81 @@ paths:
       summary: 获取当前用户
       tags:
       - 认证
+  /auth/oauth/{provider}:
+    get:
+      consumes:
+      - application/json
+      description: 重定向到第三方OAuth授权页面
+      parameters:
+      - description: OAuth提供商
+        enum:
+        - google
+        - github
+        - wechat
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: 重定向到OAuth授权页面
+        "501":
+          description: OAuth登录尚未实现
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      summary: OAuth 第三方登录
+      tags:
+      - 认证
+  /auth/oauth/{provider}/callback:
+    get:
+      consumes:
+      - application/json
+      description: 处理OAuth授权回调,完成登录
+      parameters:
+      - description: OAuth提供商
+        enum:
+        - google
+        - github
+        - wechat
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: 授权码
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: 状态码
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.LoginResponse'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "501":
+          description: OAuth回调尚未实现
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      summary: OAuth 回调
+      tags:
+      - 认证
   /auth/refresh:
     post:
       consumes:
@@ -343,6 +778,96 @@ paths:
       summary: 发送验证码
       tags:
       - 认证
+  /users/me:
+    put:
+      consumes:
+      - application/json
+      description: 更新当前用户的姓名、手机、头像等信息
+      parameters:
+      - description: 更新请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      security:
+      - Bearer: []
+      summary: 更新个人资料
+      tags:
+      - 用户
+  /users/me/password:
+    put:
+      consumes:
+      - application/json
+      description: 修改当前用户密码
+      parameters:
+      - description: 修改密码请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 密码修改成功
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "400":
+          description: 旧密码错误或请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      security:
+      - Bearer: []
+      summary: 修改密码
+      tags:
+      - 用户
+  /users/me/quota:
+    get:
+      consumes:
+      - application/json
+      description: 查看当前用户的Token配额使用情况
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_dto.UsageStats'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lexveritas_lex-veritas-backend_internal_pkg_response.Response'
+      security:
+      - Bearer: []
+      summary: 获取当前用户Token配额
+      tags:
+      - 用户
 securityDefinitions:
   Bearer:
     description: '输入格式: Bearer {token}'

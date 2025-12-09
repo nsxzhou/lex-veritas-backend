@@ -251,3 +251,56 @@ func (h *AuthHandler) Me(c *gin.Context) {
 
 	response.Success(c, user)
 }
+
+// OAuthLogin OAuth 登录重定向
+// @Summary      OAuth 第三方登录
+// @Description  重定向到第三方OAuth授权页面
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Param        provider path string true "OAuth提供商" Enums(google, github, wechat)
+// @Success      302 "重定向到OAuth授权页面"
+// @Failure      501 {object} response.Response "OAuth登录尚未实现"
+// @Router       /auth/oauth/{provider} [get]
+func (h *AuthHandler) OAuthLogin(c *gin.Context) {
+	provider := c.Param("provider")
+	if provider == "" {
+		response.BadRequest(c, "provider不能为空")
+		return
+	}
+
+	// TODO: 生成 state 并存储到 session/redis
+	// TODO: 构建 OAuth 授权 URL
+	// TODO: 重定向用户
+
+	response.NotImplemented(c, "OAuth登录尚未实现,支持: google, github, wechat")
+}
+
+// OAuthCallback OAuth 回调处理
+// @Summary      OAuth 回调
+// @Description  处理OAuth授权回调,完成登录
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Param        provider path string true "OAuth提供商" Enums(google, github, wechat)
+// @Param        code query string true "授权码"
+// @Param        state query string true "状态码"
+// @Success      200 {object} response.Response{data=dto.LoginResponse} "登录成功"
+// @Failure      400 {object} response.Response "参数错误"
+// @Failure      501 {object} response.Response "OAuth回调尚未实现"
+// @Router       /auth/oauth/{provider}/callback [get]
+func (h *AuthHandler) OAuthCallback(c *gin.Context) {
+	provider := c.Param("provider")
+	code := c.Query("code")
+	state := c.Query("state")
+
+	if provider == "" || code == "" || state == "" {
+		response.BadRequest(c, "缺少必要参数")
+		return
+	}
+
+	// TODO: 验证 state
+	// TODO: 调用 authSvc.OAuthCallback
+
+	response.NotImplemented(c, "OAuth回调处理尚未实现")
+}

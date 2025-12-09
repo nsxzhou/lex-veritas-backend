@@ -46,19 +46,6 @@ func QuotaCheck() gin.HandlerFunc {
 	}
 }
 
-// RequireAdmin 管理员权限验证中间件
-func RequireAdmin() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		role := GetRole(c)
-		if role != model.RoleAdmin {
-			response.Forbidden(c, "需要管理员权限")
-			c.Abort()
-			return
-		}
-		c.Next()
-	}
-}
-
 // GetTokenRemaining 获取剩余额度
 func GetTokenRemaining(c *gin.Context) int64 {
 	if remaining, exists := c.Get("tokenRemaining"); exists {

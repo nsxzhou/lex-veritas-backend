@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/lexveritas/lex-veritas-backend/internal/dto"
 	"github.com/lexveritas/lex-veritas-backend/internal/model"
 	"github.com/lexveritas/lex-veritas-backend/internal/pkg/database"
 	"gorm.io/gorm"
@@ -32,6 +33,10 @@ type UserRepository interface {
 
 	// 列表查询 (admin)
 	List(ctx context.Context, page, pageSize int) ([]model.User, int64, error)
+	ListWithFilters(ctx context.Context, page, pageSize int, filters *dto.UserListRequest) ([]model.User, int64, error)
+
+	// 删除
+	Delete(ctx context.Context, id string) error
 }
 
 // userRepository 用户数据访问实现
@@ -155,4 +160,50 @@ func (r *userRepository) List(ctx context.Context, page, pageSize int) ([]model.
 	}
 
 	return users, total, nil
+}
+
+// ListWithFilters 带筛选条件的分页查询
+func (r *userRepository) ListWithFilters(ctx context.Context, page, pageSize int, filters *dto.UserListRequest) ([]model.User, int64, error) {
+	var users []model.User
+	var total int64
+
+	db := database.DB().WithContext(ctx).Model(&model.User{})
+
+	// 应用筛选条件
+	if filters.Email != "" {
+		db = db.Where("email = ?", filters.Email)
+	}
+	if filters.Role != "" {
+		db = db.Where("role = ?", filters.Role)
+	}
+	if filters.Status != "" {
+		db = db.Where("status = ?", filters.Status)
+	}
+	if filters.Keyword != "" {
+		// 模糊搜索邮箱或姓名
+		db = db.Where("email LIKE ? OR name LIKE ?", "%"+filters.Keyword+"%", "%"+filters.Keyword+"%")
+	}
+
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	if err := db.Offset(offset).Limit(pageSize).Order("created_at DESC").Find(&users).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return users, total, nil
+}
+
+// Delete 软删除用户
+func (r *userRepository) Delete(ctx context.Context, id string) error {
+	result := database.DB().WithContext(ctx).Delete(&model.User{}, "id = ?", id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return ErrUserNotFound
+	}
+	return nil
 }

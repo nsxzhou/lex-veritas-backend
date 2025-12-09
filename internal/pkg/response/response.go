@@ -117,6 +117,18 @@ func InternalError(c *gin.Context, err error) {
 	Error(c, errors.Wrap(errors.CodeInternalError, err))
 }
 
+// NotImplemented 功能未实现响应
+func NotImplemented(c *gin.Context, message ...string) {
+	msg := "功能尚未实现"
+	if len(message) > 0 && message[0] != "" {
+		msg = message[0]
+	}
+	c.JSON(http.StatusNotImplemented, Response{
+		Code:    http.StatusNotImplemented,
+		Message: msg,
+	})
+}
+
 // getRequestID 从上下文获取请求 ID（仅用于日志）
 func getRequestID(c *gin.Context) string {
 	if id, exists := c.Get("request_id"); exists {

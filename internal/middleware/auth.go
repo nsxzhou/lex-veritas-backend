@@ -122,6 +122,16 @@ func RequireRole(roles ...model.UserRole) gin.HandlerFunc {
 	}
 }
 
+// RequireAdmin 管理员权限中间件 (admin 或 super_admin)
+func RequireAdmin() gin.HandlerFunc {
+	return RequireRole(model.RoleAdmin, model.RoleSuperAdmin)
+}
+
+// RequireSuperAdmin 超级管理员权限中间件
+func RequireSuperAdmin() gin.HandlerFunc {
+	return RequireRole(model.RoleSuperAdmin)
+}
+
 // ========================= 辅助函数 =========================
 
 // GetUserID 从上下文获取用户 ID
